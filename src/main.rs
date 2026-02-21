@@ -41,7 +41,21 @@ fn main(mut req: Request) -> Result<Response, Error> {
         "/ruby-dev" => Ok(Response::redirect(
             "https://github.com/spinel-coop/rv-ruby-dev/",
         )),
-        "/install" | "/install.sh" => Ok(Response::redirect(
+        "/install" => {
+            if req
+                .get_header_str("User-Agent")
+                .is_some_and(|h| h.starts_with("curl"))
+            {
+                Ok(Response::redirect(
+                    "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.sh",
+                ))
+            } else {
+                Ok(Response::redirect(
+                    "https://github.com/spinel-coop/rv/releases/latest",
+                ))
+            }
+        }
+        "/install.sh" => Ok(Response::redirect(
             "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.sh",
         )),
         "/install.ps1" => Ok(Response::redirect(
