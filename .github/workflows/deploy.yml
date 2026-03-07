@@ -13,7 +13,7 @@ jobs:
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
-          targets: wasm32-wasi # WebAssembly target
+          targets: wasm32-wasip2 # WebAssembly target
 
     - name: Deploy to Compute
       uses: fastly/compute-actions@v12
