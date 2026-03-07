@@ -34,3 +34,7 @@ else
 fi
 
 rustup target add wasm32-wasip1
+
+if ! which viceroy > /dev/null 2>&1; then
+  cargo install viceroy
+fi
