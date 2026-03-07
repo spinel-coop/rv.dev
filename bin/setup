@@ -1,0 +1,36 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  set -x
+
+  if [[ -z $(which brew) ]]; then
+    echo "Homebrew is not installed. Please install Homebrew first."
+    exit 1
+  fi
+
+  if [[ -z $(which rustup) ]]; then
+    brew install rustup
+    rustup install stable
+  fi
+
+  if ! which fastly > /dev/null 2>&1; then
+    brew install fastly/tap/fastly
+  fi
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  if [[ -z $(which rustup) ]]; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    . "$HOME/.cargo/env"
+  fi
+
+  if ! which fastly > /dev/null 2>&1; then
+    set -x
+    curl -sL https://github.com/fastly/cli/raw/main/pkg/scripts/install.sh | bash
+    set +x
+  fi
+else
+  echo "We don't support automatic setup on $OSTYPE yet, sorry."
+  exit 1
+fi
+
+rustup target add wasm32-wasip1
