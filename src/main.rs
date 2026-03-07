@@ -1,11 +1,25 @@
-//! Default Compute template program.
+//! rv.dev — Website and installer redirect service for rv.
 
+use fastly::convert::ToHeaderValue;
 use fastly::http::{header, Method, StatusCode};
 use fastly::{Error, Request, Response};
 
+/// Create a 302 Found redirect response.
+///
+/// The Fastly default `Response::redirect` uses 308 Permanent Redirect, which is not
+/// supported by older PowerShell versions. 302 is universally supported and
+/// appropriate here since the redirect targets (e.g. `/releases/latest/...`)
+/// can change over time.
+fn redirect_found(destination: impl ToHeaderValue) -> Response {
+    Response::from_status(StatusCode::FOUND).with_header(header::LOCATION, destination)
+}
+
 #[fastly::main]
-fn main(mut req: Request) -> Result<Response, Error> {
-    // let local_dev = std::env::var("FASTLY_HOSTNAME").unwrap_or_default() == "localhost";
+fn main(req: Request) -> Result<Response, Error> {
+    handler(req)
+}
+
+fn handler(mut req: Request) -> Result<Response, Error> {
     let service_version = std::env::var("FASTLY_SERVICE_VERSION").unwrap_or_default();
 
     // Remove the query string to improve cache hit ratio.
@@ -33,12 +47,9 @@ fn main(mut req: Request) -> Result<Response, Error> {
 
     // Pattern match on the path...
     match req.get_path() {
-        // If request is to the `/` path...
-        "/" => Ok(Response::redirect("https://github.com/spinel-coop/rv/")),
-        "/ruby" => Ok(Response::redirect(
-            "https://github.com/spinel-coop/rv-ruby/",
-        )),
-        "/ruby-dev" => Ok(Response::redirect(
+        "/" => Ok(redirect_found("https://github.com/spinel-coop/rv/")),
+        "/ruby" => Ok(redirect_found("https://github.com/spinel-coop/rv-ruby/")),
+        "/ruby-dev" => Ok(redirect_found(
             "https://github.com/spinel-coop/rv-ruby-dev/",
         )),
         "/install" => {
@@ -46,19 +57,19 @@ fn main(mut req: Request) -> Result<Response, Error> {
                 .get_header_str("User-Agent")
                 .is_some_and(|h| h.starts_with("curl"))
             {
-                Ok(Response::redirect(
+                Ok(redirect_found(
                     "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.sh",
                 ))
             } else {
-                Ok(Response::redirect(
+                Ok(redirect_found(
                     "https://github.com/spinel-coop/rv/releases/latest",
                 ))
             }
         }
-        "/install.sh" => Ok(Response::redirect(
+        "/install.sh" => Ok(redirect_found(
             "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.sh",
         )),
-        "/install.ps1" => Ok(Response::redirect(
+        "/install.ps1" => Ok(redirect_found(
             "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.ps1",
         )),
 
