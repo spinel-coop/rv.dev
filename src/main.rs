@@ -78,3 +78,86 @@ fn handler(mut req: Request) -> Result<Response, Error> {
             .with_body_text_plain("The page you requested could not be found.\n")),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assert_redirect(resp: &Response, expected_location: &str) {
+        assert_eq!(resp.get_status(), StatusCode::FOUND);
+        assert_eq!(resp.get_header_str("Location"), Some(expected_location),);
+    }
+
+    #[test]
+    fn root_redirects_to_github() {
+        let req = Request::get("http://rv.dev/");
+        let resp = handler(req).expect("request succeeds");
+        assert_redirect(&resp, "https://github.com/spinel-coop/rv/");
+    }
+
+    #[test]
+    fn ruby_redirects() {
+        let req = Request::get("http://rv.dev/ruby");
+        let resp = handler(req).expect("request succeeds");
+        assert_redirect(&resp, "https://github.com/spinel-coop/rv-ruby/");
+    }
+
+    #[test]
+    fn ruby_dev_redirects() {
+        let req = Request::get("http://rv.dev/ruby-dev");
+        let resp = handler(req).expect("request succeeds");
+        assert_redirect(&resp, "https://github.com/spinel-coop/rv-ruby-dev/");
+    }
+
+    #[test]
+    fn install_with_curl_redirects_to_sh() {
+        let mut req = Request::get("http://rv.dev/install");
+        req.set_header("User-Agent", "curl/8.0");
+        let resp = handler(req).expect("request succeeds");
+        assert_redirect(
+            &resp,
+            "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.sh",
+        );
+    }
+
+    #[test]
+    fn install_without_curl_redirects_to_releases() {
+        let req = Request::get("http://rv.dev/install");
+        let resp = handler(req).expect("request succeeds");
+        assert_redirect(&resp, "https://github.com/spinel-coop/rv/releases/latest");
+    }
+
+    #[test]
+    fn install_sh_redirects() {
+        let req = Request::get("http://rv.dev/install.sh");
+        let resp = handler(req).expect("request succeeds");
+        assert_redirect(
+            &resp,
+            "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.sh",
+        );
+    }
+
+    #[test]
+    fn install_ps1_redirects() {
+        let req = Request::get("http://rv.dev/install.ps1");
+        let resp = handler(req).expect("request succeeds");
+        assert_redirect(
+            &resp,
+            "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.ps1",
+        );
+    }
+
+    #[test]
+    fn unknown_path_returns_404() {
+        let req = Request::get("http://rv.dev/nonexistent");
+        let resp = handler(req).expect("request succeeds");
+        assert_eq!(resp.get_status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn post_returns_405() {
+        let req = Request::post("http://rv.dev/");
+        let resp = handler(req).expect("request succeeds");
+        assert_eq!(resp.get_status(), StatusCode::METHOD_NOT_ALLOWED);
+    }
+}
