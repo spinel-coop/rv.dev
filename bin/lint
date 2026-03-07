@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+set -x
+
+cargo clippy "$@" -- -D warnings
+
+if [ $# -gt 0 ] && [ "$1" = "--fix" ]
+then
+  cargo fmt --all
+else
+  cargo fmt --all -- --check
+fi
