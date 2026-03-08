@@ -1,0 +1,52 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  set -x
+
+  if [[ -z $(which brew) ]]; then
+    echo "Homebrew is not installed. Please install Homebrew first."
+    exit 1
+  fi
+
+  if [[ -z $(which rustup) ]]; then
+    brew install rustup
+    rustup install stable
+  fi
+
+  if ! which fastly > /dev/null 2>&1; then
+    brew install fastly/tap/fastly
+  fi
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  if [[ -z $(which rustup) ]]; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    . "$HOME/.cargo/env"
+  fi
+
+  if ! which fastly > /dev/null 2>&1; then
+    set -x
+    curl -sL https://github.com/fastly/cli/raw/main/pkg/scripts/install.sh | bash
+    set +x
+  fi
+else
+  echo "We don't support automatic setup on $OSTYPE yet, sorry."
+  exit 1
+fi
+
+rustup target add wasm32-wasip1
+
+if ! which viceroy > /dev/null 2>&1; then
+  VICEROY_VERSION=$(curl -sI https://github.com/fastly/Viceroy/releases/latest | grep -i '^location:' | sed 's|.*/||' | tr -d '\r')
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    ARCH=$(uname -m)
+    if [[ "$ARCH" == "arm64" ]]; then
+      VICEROY_PLATFORM="darwin-arm64"
+    else
+      VICEROY_PLATFORM="darwin-amd64"
+    fi
+  else
+    VICEROY_PLATFORM="linux-amd64"
+  fi
+  curl -sL "https://github.com/fastly/Viceroy/releases/download/${VICEROY_VERSION}/viceroy_${VICEROY_VERSION}_${VICEROY_PLATFORM}.tar.gz" | tar xz
+  mv viceroy "$HOME/.cargo/bin/"
+fi
