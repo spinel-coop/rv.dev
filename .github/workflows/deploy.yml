@@ -1,9 +1,11 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
+    branches: [main]
 
 permissions: read-all
 
@@ -13,6 +15,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -24,15 +27,6 @@ jobs:
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-
-      - name: Install Viceroy
-        run: cargo install viceroy
-
-      - name: Lint
-        run: bin/lint
-
-      - name: Test
-        run: bin/test
 
       - name: Deploy to Compute
         uses: fastly/compute-actions@v12
