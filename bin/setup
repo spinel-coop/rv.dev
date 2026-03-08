@@ -36,5 +36,17 @@ fi
 rustup target add wasm32-wasip1
 
 if ! which viceroy > /dev/null 2>&1; then
-  cargo install viceroy
+  VICEROY_VERSION=$(curl -sI https://github.com/fastly/Viceroy/releases/latest | grep -i '^location:' | sed 's|.*/||' | tr -d '\r')
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    ARCH=$(uname -m)
+    if [[ "$ARCH" == "arm64" ]]; then
+      VICEROY_PLATFORM="darwin-arm64"
+    else
+      VICEROY_PLATFORM="darwin-amd64"
+    fi
+  else
+    VICEROY_PLATFORM="linux-amd64"
+  fi
+  curl -sL "https://github.com/fastly/Viceroy/releases/download/${VICEROY_VERSION}/viceroy_${VICEROY_VERSION}_${VICEROY_PLATFORM}.tar.gz" | tar xz
+  mv viceroy "$HOME/.cargo/bin/"
 fi
