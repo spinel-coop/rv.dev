@@ -27,4 +27,5 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           target: wasm32-wasip1
+      - run: bin/setup
       - run: bin/test
