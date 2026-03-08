@@ -7,29 +7,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions: read-all
-
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          targets: wasm32-wasip1
-          components: rustfmt, clippy
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Run linters
-        run: bin/lint
+          target: wasm32-wasip1
+      - run: bin/lint
 
   test:
     name: Test
@@ -37,19 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          targets: wasm32-wasip1
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install Viceroy
-        uses: fastly/compute-actions/setup@v12
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run tests
-        run: bin/test
+          target: wasm32-wasip1
+      - run: bin/test
