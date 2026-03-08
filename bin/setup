@@ -47,6 +47,6 @@ if ! which viceroy > /dev/null 2>&1; then
   else
     VICEROY_PLATFORM="linux-amd64"
   fi
-  curl -sL "https://github.com/fastly/Viceroy/releases/download/${VICEROY_VERSION}/viceroy_${VICEROY_VERSION}_${VICEROY_PLATFORM}.tar.gz" | tar xz
-  mv viceroy "$HOME/.cargo/bin/"
+  curl -sL "https://github.com/fastly/Viceroy/releases/download/${VICEROY_VERSION}/viceroy_${VICEROY_VERSION}_${VICEROY_PLATFORM}.tar.gz" \
+    | tar -xzvvf - -C "$HOME/.cargo/bin/"
 fi
