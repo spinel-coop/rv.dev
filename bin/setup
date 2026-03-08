@@ -11,7 +11,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
   if [[ -z $(which rustup) ]]; then
     brew install rustup
-    rustup install stable
   fi
 
   if ! which fastly > /dev/null 2>&1; then
@@ -22,18 +21,28 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     . "$HOME/.cargo/env"
   fi
-
-  if ! which fastly > /dev/null 2>&1; then
-    set -x
-    curl -sL https://github.com/fastly/cli/raw/main/pkg/scripts/install.sh | bash
-    set +x
-  fi
 else
   echo "We don't support automatic setup on $OSTYPE yet, sorry."
   exit 1
 fi
 
 rustup target add wasm32-wasip1
+
+if ! which fastly > /dev/null 2>&1; then
+  FASTLY_VERSION=$(curl -sI https://github.com/fastly/cli/releases/latest | grep -i '^location:' | sed 's|.*/||' | tr -d '\r')
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    ARCH=$(uname -m)
+    if [[ "$ARCH" == "arm64" ]]; then
+      FASTLY_PLATFORM="darwin-arm64"
+    else
+      FASTLY_PLATFORM="darwin-amd64"
+    fi
+  else
+    FASTLY_PLATFORM="linux-amd64"
+  fi
+  curl -sL "https://github.com/fastly/cli/releases/download/${FASTLY_VERSION}/fastly_${FASTLY_VERSION}_${FASTLY_PLATFORM}.tar.gz" \
+    | tar -xzvvf - -C "$HOME/.cargo/bin/"
+fi
 
 if ! which viceroy > /dev/null 2>&1; then
   VICEROY_VERSION=$(curl -sI https://github.com/fastly/Viceroy/releases/latest | grep -i '^location:' | sed 's|.*/||' | tr -d '\r')
