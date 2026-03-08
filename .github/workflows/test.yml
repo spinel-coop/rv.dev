@@ -47,7 +47,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install Viceroy
-        run: cargo install viceroy
+        uses: fastly/compute-actions/setup@v12
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests
         run: bin/test
