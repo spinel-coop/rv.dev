@@ -72,6 +72,9 @@ fn handler(mut req: Request) -> Result<Response, Error> {
         "/install.ps1" => Ok(redirect_found(
             "https://github.com/spinel-coop/rv/releases/latest/download/rv-installer.ps1",
         )),
+        "/ai-policy" => Ok(redirect_found(
+            "https://github.com/spinel-coop/rv/blob/main/AI_POLICY.md",
+        )),
 
         // Catch all other requests and return a 404.
         _ => Ok(Response::from_status(StatusCode::NOT_FOUND)
