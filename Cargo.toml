@@ -13,7 +13,7 @@ codegen-units = 1
 lto = "fat"
 
 [dependencies]
-fastly = "0.11.0"
+fastly = "0.13.2"
 hmac = "0.12"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10"
