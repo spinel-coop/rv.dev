@@ -1,8 +1,11 @@
-//! rv.dev — Website and installer redirect service for rv.
+//! rv.dev — Website, installer redirects and ruby downloads for rv.
 
 use fastly::convert::ToHeaderValue;
 use fastly::http::{header, Method, StatusCode};
 use fastly::{Error, Request, Response};
+
+mod ruby;
+mod sigv4;
 
 /// Create a 302 Found redirect response.
 ///
@@ -75,6 +78,9 @@ fn handler(mut req: Request) -> Result<Response, Error> {
         "/ai-policy" => Ok(redirect_found(
             "https://github.com/spinel-coop/rv/blob/main/AI_POLICY.md",
         )),
+        "/healthz" => Ok(ruby::health()),
+        // `/ruby` itself still redirects to the repo, above.
+        path if path.starts_with("/ruby/") => Ok(ruby::handle(&req)),
 
         // Catch all other requests and return a 404.
         _ => Ok(Response::from_status(StatusCode::NOT_FOUND)
@@ -155,6 +161,36 @@ mod tests {
         let req = Request::get("http://rv.dev/nonexistent");
         let resp = handler(req).expect("request succeeds");
         assert_eq!(resp.get_status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn ruby_path_that_is_not_a_download_returns_404() {
+        let req = Request::get("http://rv.dev/ruby/3.4.11");
+        let resp = handler(req).expect("request succeeds");
+        assert_eq!(resp.get_status(), StatusCode::NOT_FOUND);
+    }
+
+    #[test]
+    fn ruby_download_with_another_method_returns_405() {
+        let req = Request::new(Method::OPTIONS, "http://rv.dev/ruby/3.4.11/macos-aarch64");
+        let resp = handler(req).expect("request succeeds");
+        assert_eq!(resp.get_status(), StatusCode::METHOD_NOT_ALLOWED);
+    }
+
+    // The test server has no secret store, so nothing can be read from the bucket.
+    #[test]
+    fn ruby_download_without_the_bucket_returns_503() {
+        let req = Request::get("http://rv.dev/ruby/3.4.11/macos-aarch64");
+        let resp = handler(req).expect("request succeeds");
+        assert_eq!(resp.get_status(), StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(resp.get_header_str("Retry-After"), Some("30"));
+    }
+
+    #[test]
+    fn healthz_without_the_bucket_returns_503() {
+        let req = Request::get("http://rv.dev/healthz");
+        let resp = handler(req).expect("request succeeds");
+        assert_eq!(resp.get_status(), StatusCode::SERVICE_UNAVAILABLE);
     }
 
     #[test]
