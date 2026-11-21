@@ -342,8 +342,8 @@ mod tests {
         "platforms": {
             "macos-aarch64": {
                 "build": "20261014",
-                "filename": "ruby-3.4.11.arm64_sonoma.tar.gz",
-                "url": "https://rv.dev/ruby/3.4.11/20261014/ruby-3.4.11.arm64_sonoma.tar.gz",
+                "filename": "ruby-3.4.11.macos-aarch64.tar.gz",
+                "url": "https://rv.dev/ruby/3.4.11/20261014/ruby-3.4.11.macos-aarch64.tar.gz",
                 "size": 36656127,
                 "sha256": "0f2d7e8c6b5a49382716f5e4d3c2b1a00f2d7e8c6b5a49382716f5e4d3c2b1a0"
             }
@@ -373,8 +373,8 @@ mod tests {
 
     #[test]
     fn routes_artifacts_by_their_key() {
-        let cruby = "3.4.11/20261014/ruby-3.4.11.arm64_sonoma.tar.gz";
-        let sidecar = "3.4.11/20261014/ruby-3.4.11.arm64_sonoma.tar.gz.sha256";
+        let cruby = "3.4.11/20261014/ruby-3.4.11.macos-aarch64.tar.gz";
+        let sidecar = "3.4.11/20261014/ruby-3.4.11.macos-aarch64.tar.gz.sha256";
         let jruby = "jruby/10.1.2.0/20261015/jruby-bin-10.1.2.0.tar.gz";
 
         assert_eq!(route(cruby), Some(Route::Artifact(cruby)));
@@ -422,8 +422,8 @@ mod tests {
     #[test]
     fn encodes_keys_for_the_bucket() {
         assert_eq!(
-            encode("3.4.11/20261014/ruby-3.4.11.arm64_sonoma.tar.gz"),
-            "3.4.11/20261014/ruby-3.4.11.arm64_sonoma.tar.gz"
+            encode("3.4.11/20261014/ruby-3.4.11.macos-aarch64.tar.gz"),
+            "3.4.11/20261014/ruby-3.4.11.macos-aarch64.tar.gz"
         );
         assert_eq!(encode("a b/c+d"), "a%20b/c%2Bd");
     }
@@ -448,11 +448,11 @@ mod tests {
         );
         assert_eq!(
             resp.get_header_str("x-rv-filename"),
-            Some("ruby-3.4.11.arm64_sonoma.tar.gz")
+            Some("ruby-3.4.11.macos-aarch64.tar.gz")
         );
         assert_eq!(
             resp.get_header_str("Content-Disposition"),
-            Some("attachment; filename=\"ruby-3.4.11.arm64_sonoma.tar.gz\"")
+            Some("attachment; filename=\"ruby-3.4.11.macos-aarch64.tar.gz\"")
         );
         assert_eq!(resp.get_header_str("Accept-Ranges"), Some("bytes"));
     }
