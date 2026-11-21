@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn ruby_download_with_another_method_returns_405() {
-        let req = Request::new(Method::OPTIONS, "http://rv.dev/ruby/3.4.11/arm64_sonoma");
+        let req = Request::new(Method::OPTIONS, "http://rv.dev/ruby/3.4.11/macos-aarch64");
         let resp = handler(req).expect("request succeeds");
         assert_eq!(resp.get_status(), StatusCode::METHOD_NOT_ALLOWED);
     }
@@ -180,7 +180,7 @@ mod tests {
     // The test server has no secret store, so nothing can be read from the bucket.
     #[test]
     fn ruby_download_without_the_bucket_returns_503() {
-        let req = Request::get("http://rv.dev/ruby/3.4.11/arm64_sonoma");
+        let req = Request::get("http://rv.dev/ruby/3.4.11/macos-aarch64");
         let resp = handler(req).expect("request succeeds");
         assert_eq!(resp.get_status(), StatusCode::SERVICE_UNAVAILABLE);
         assert_eq!(resp.get_header_str("Retry-After"), Some("30"));

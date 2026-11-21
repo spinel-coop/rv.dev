@@ -8,7 +8,7 @@ Paths under `/ruby/` serve the precompiled rubies that `rv` installs. They come 
 
 - `/ruby/v1/index.json` lists the newest build of every ruby.
 - `/ruby/3.4.11/20261014/ruby-3.4.11.arm64_sonoma.tar.gz` is one build, and never changes.
-- `/ruby/3.4.11/arm64_sonoma` is the newest build for that platform. The `x-rv-build`, `x-rv-sha256`, `x-rv-size` and `x-rv-filename` headers say which one it is.
+- `/ruby/3.4.11/macos-aarch64` is the newest build for that platform. The `x-rv-build`, `x-rv-sha256`, `x-rv-size` and `x-rv-filename` headers say which one it is.
 - `/healthz` checks that the bucket can be reached and has an index.
 
 ## Local dev

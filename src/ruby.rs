@@ -1,7 +1,7 @@
 //! rv.dev/ruby — precompiled rubies for rv, served from a Fastly Object Storage bucket.
 //!
 //! A path under `/ruby/` is the key of an object in the bucket. The exception is a dateless
-//! alias like `/ruby/3.4.11/arm64_sonoma`, which serves the newest build for that platform.
+//! alias like `/ruby/3.4.11/macos-aarch64`, which serves the newest build for that platform.
 
 use std::collections::HashMap;
 
@@ -340,7 +340,7 @@ mod tests {
         "engine": "ruby",
         "version": "3.4.11",
         "platforms": {
-            "arm64_sonoma": {
+            "macos-aarch64": {
                 "build": "20261014",
                 "filename": "ruby-3.4.11.arm64_sonoma.tar.gz",
                 "url": "https://rv.dev/ruby/3.4.11/20261014/ruby-3.4.11.arm64_sonoma.tar.gz",
@@ -385,27 +385,27 @@ mod tests {
     #[test]
     fn routes_dateless_aliases() {
         assert_eq!(
-            route("3.4.11/arm64_sonoma"),
+            route("3.4.11/macos-aarch64"),
             Some(Route::Alias {
                 engine: "ruby",
                 version: "3.4.11",
-                platform: "arm64_sonoma"
+                platform: "macos-aarch64"
             })
         );
         assert_eq!(
-            route("dev/x86_64_linux_musl"),
+            route("dev/linux-musl-x86_64"),
             Some(Route::Alias {
                 engine: "ruby",
                 version: "dev",
-                platform: "x86_64_linux_musl"
+                platform: "linux-musl-x86_64"
             })
         );
         assert_eq!(
-            route("jruby/10.1.2.0/ventura"),
+            route("jruby/10.1.2.0/macos-x86_64"),
             Some(Route::Alias {
                 engine: "jruby",
                 version: "10.1.2.0",
-                platform: "ventura"
+                platform: "macos-x86_64"
             })
         );
     }
@@ -414,7 +414,7 @@ mod tests {
     fn routes_nothing_else() {
         assert_eq!(route(""), None);
         assert_eq!(route("3.4.11"), None);
-        assert_eq!(route("3.4.11//arm64_sonoma"), None);
+        assert_eq!(route("3.4.11//macos-aarch64"), None);
         assert_eq!(route("3.4.11/../v1/index.json.prev"), None);
         assert_eq!(route("3.4.11/20261014/ruby/extra/segments"), None);
     }
@@ -437,7 +437,7 @@ mod tests {
     #[test]
     fn describes_an_alias_response() {
         let map: AliasMap = serde_json::from_str(ALIAS_MAP).unwrap();
-        let entry = &map.platforms["arm64_sonoma"];
+        let entry = &map.platforms["macos-aarch64"];
         let resp = entry.describe(Response::new());
 
         assert_eq!(resp.get_header_str("x-rv-build"), Some("20261014"));
