@@ -141,11 +141,18 @@ fn serve(req: &Request, path: &str) -> Result<Response, Error> {
 
             let object = fetch(method, range, key, Some(&IMMUTABLE), None)?;
             let resp = respond(object, &SHORT);
-            if resp.get_status().is_success() {
-                Ok(entry.describe(resp))
-            } else {
-                Ok(resp)
+            if !resp.get_status().is_success() {
+                return Ok(resp);
             }
+            let size = body_size(&resp);
+            if size != Some(entry.size) {
+                eprintln!(
+                    "{key} is {size:?}, but the alias map says {} bytes",
+                    entry.size
+                );
+                return Ok(not_found());
+            }
+            Ok(entry.describe(resp))
         }
         None => Ok(not_found()),
     }
@@ -284,6 +291,15 @@ fn respond(mut beresp: Response, caching: &Caching) -> Response {
         beresp.remove_header(name);
     }
     beresp.with_header(header::CACHE_CONTROL, caching.cache_control)
+}
+
+fn body_size(resp: &Response) -> Option<u64> {
+    if resp.get_status() == StatusCode::PARTIAL_CONTENT {
+        let range = resp.get_header_str(header::CONTENT_RANGE)?;
+        range.rsplit('/').next()?.trim().parse().ok()
+    } else {
+        resp.get_content_length().map(|size| size as u64)
+    }
 }
 
 /// Asks Fastly to compress the response for clients that accept it.
@@ -481,6 +497,24 @@ mod tests {
         );
         assert_eq!(resp.get_header_str("ETag"), Some("\"abc\""));
         assert_eq!(resp.get_header_str("x-amz-request-id"), None);
+    }
+
+    #[test]
+    fn verify_response_body_size() {
+        let whole =
+            Response::from_status(StatusCode::OK).with_header(header::CONTENT_LENGTH, "16424871");
+        assert_eq!(body_size(&whole), Some(16_424_871));
+
+        let partial = Response::from_status(StatusCode::PARTIAL_CONTENT)
+            .with_header(header::CONTENT_RANGE, "bytes 0-99/16424871");
+        assert_eq!(body_size(&partial), Some(16_424_871));
+
+        // A cached 404, which Fastly hands to a range request as if it were the object.
+        let poisoned = Response::from_status(StatusCode::PARTIAL_CONTENT)
+            .with_header(header::CONTENT_RANGE, "bytes 0-99/228");
+        assert_ne!(body_size(&poisoned), Some(16_424_871));
+
+        assert_eq!(body_size(&Response::from_status(StatusCode::OK)), None);
     }
 
     #[test]
