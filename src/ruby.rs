@@ -229,6 +229,7 @@ fn fetch(
                     candidate.set_ttl(ttl);
                 } else {
                     candidate.set_ttl(Duration::from_mins(10));
+                    candidate.set_body_transform(|_body, _out| Ok(()));
                 };
                 Ok(())
             });
