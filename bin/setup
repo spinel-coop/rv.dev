@@ -13,6 +13,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     brew install rustup
   fi
 
+  if [[ -z $(which cargo-binstall) ]]; then
+    brew install cargo-binstall
+  fi
+
   if ! which fastly > /dev/null 2>&1; then
     brew install fastly/tap/fastly
   fi
@@ -21,9 +25,17 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     . "$HOME/.cargo/env"
   fi
+
+  if [[ -z $(which cargo-binstall) ]]; then
+    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+  fi
 else
   echo "We don't support automatic setup on $OSTYPE yet, sorry."
   exit 1
+fi
+
+if ! which cargo-nextest > /dev/null 2>&1; then
+  cargo binstall cargo-nextest
 fi
 
 rustup target add wasm32-wasip1
