@@ -4,6 +4,7 @@
 //! alias like `/ruby/3.4.11/macos-aarch64`, which serves the newest build for that platform.
 
 use std::collections::HashMap;
+use std::time::Duration;
 
 use fastly::http::{header, FramingHeadersMode, HeaderValue, Method, StatusCode};
 use fastly::secret_store::SecretStore;
@@ -221,8 +222,16 @@ fn fetch(
     }
     match caching {
         Some(caching) => {
-            bereq.set_ttl(caching.ttl);
             bereq.set_stale_while_revalidate(caching.stale_while_revalidate);
+            let ttl = Duration::from_secs(caching.ttl.into());
+            bereq.set_after_send(move |candidate| {
+                if candidate.get_status().is_success() {
+                    candidate.set_ttl(ttl);
+                } else {
+                    candidate.set_ttl(Duration::from_mins(10));
+                };
+                Ok(())
+            });
         }
         None => bereq.set_pass(true),
     }
